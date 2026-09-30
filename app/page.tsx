@@ -2,7 +2,7 @@ export default function HomePage() {
   return (
     <section className="max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">
-        Лабораторна №2 Next.js + Tailwind
+        Лабораторна №3 фронт + бек
       </h1>
       <p className="mb-6 text-gray-700">
         Цей rhenbq проtкт демонструє роботу системи моніторингу давачів у реальному часі. 
