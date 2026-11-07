@@ -23,7 +23,7 @@ export default function DashboardTempPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(`${apiUrl}/sensors`);
+        const res = await fetch(`${apiUrl}/temperature-sensors`);
         if (!res.ok) throw new Error("Error fetching data");
         const data = await res.json();
         const formatted = data.map((item: any) => ({
