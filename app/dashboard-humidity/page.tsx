@@ -26,7 +26,12 @@ export default function DashboardHumidityPage() {
         const res = await fetch(`${apiUrl}/humidity-sensors`);
         if (!res.ok) throw new Error("Error fetching data");
         const data = await res.json();
-        const formatted = data.map((item: any) => ({
+        const sorted = [...data].sort(
+          (a: any, b: any) =>
+            new Date(a.timestamp).getTime() -
+            new Date(b.timestamp).getTime(),
+        );
+        const formatted = sorted.map((item: any) => ({
           time: new Date(item.timestamp).toLocaleTimeString("uk-UA", {
             hour: "2-digit",
             minute: "2-digit",
