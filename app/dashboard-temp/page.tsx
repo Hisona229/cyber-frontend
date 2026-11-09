@@ -15,8 +15,17 @@ interface Reading {
   value: number;
 }
 
+interface TemperatureAlert {
+  message: string;
+  temperature: number;
+  sensorName: string;
+  timestamp: string;
+  severity: "critical" | "warning";
+}
+
 export default function DashboardTempPage() {
   const [readings, setReadings] = useState<Reading[]>([]);
+  const [alerts, setAlerts] = useState<TemperatureAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -52,11 +61,60 @@ export default function DashboardTempPage() {
     return () => clearInterval(interval);
   }, [apiUrl]);
 
+  useEffect(() => {
+    if (!apiUrl) return;
+
+    const eventSource = new EventSource(
+      `${apiUrl}/temperature-sensors/alerts`,
+    );
+
+    eventSource.onmessage = (event) => {
+      try {
+        const alert: TemperatureAlert = JSON.parse(event.data);
+        setAlerts((prev) => [alert, ...prev].slice(0, 5));
+      } catch (error) {
+        console.error("SSE parse error:", error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("SSE Error:", error);
+    };
+
+    return () => eventSource.close();
+  }, [apiUrl]);
+
   return (
     <div className="max-w-5xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6 text-slate-900">
         Графік температурного сенсора
       </h1>
+
+      {alerts.length > 0 && (
+        <div className="mb-6 space-y-3">
+          <h2 className="text-xl font-semibold text-slate-800">
+            Сповіщення в реальному часі
+          </h2>
+          {alerts.map((alert, index) => (
+            <div
+              key={`${alert.timestamp}-${index}`}
+              role="alert"
+              className={`rounded-2xl border p-4 shadow-sm ${
+                alert.severity === "critical"
+                  ? "bg-red-50 border-red-300 text-red-800"
+                  : "bg-amber-50 border-amber-300 text-amber-800"
+              }`}
+            >
+              <p className="font-semibold">{alert.message}</p>
+              <p className="text-sm mt-1">
+                Датчик: {alert.sensorName} ·{" "}
+                {new Date(alert.timestamp).toLocaleString("uk-UA")}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <h2 className="text-xl font-semibold mb-4 text-slate-800">
           Датчик температури (DHT22)
