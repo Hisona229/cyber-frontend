@@ -65,6 +65,27 @@ export default function DashboardHumidityPage() {
   useEffect(() => {
     if (!apiUrl) return;
 
+    async function fetchActiveAlerts() {
+      try {
+        const res = await fetch(
+          `${apiUrl}/humidity-sensors/alerts/active`,
+        );
+        if (!res.ok) throw new Error("Error fetching alerts");
+        const data = await res.json();
+        setAlerts(data);
+      } catch (error) {
+        console.error("Fetching alerts error:", error);
+      }
+    }
+
+    fetchActiveAlerts();
+    const interval = setInterval(fetchActiveAlerts, 5000);
+    return () => clearInterval(interval);
+  }, [apiUrl]);
+
+  useEffect(() => {
+    if (!apiUrl) return;
+
     const eventSource = new EventSource(
       `${apiUrl}/humidity-sensors/alerts`,
     );
@@ -72,7 +93,10 @@ export default function DashboardHumidityPage() {
     eventSource.onmessage = (event) => {
       try {
         const alert: HumidityAlert = JSON.parse(event.data);
-        setAlerts((prev) => [alert, ...prev].slice(0, 5));
+        setAlerts((prev) => [
+          alert,
+          ...prev.filter((item) => item.sensorName !== alert.sensorName),
+        ]);
       } catch (error) {
         console.error("SSE parse error:", error);
       }
@@ -94,11 +118,15 @@ export default function DashboardHumidityPage() {
       {alerts.length > 0 && (
         <div className="mb-6 space-y-3">
           <h2 className="text-xl font-semibold text-slate-800">
-            Сповіщення в реальному часі
+            Активні сповіщення
           </h2>
+          <p className="text-sm text-slate-500">
+            Сповіщення тримається, поки останнє значення не повернеться в норму
+            (20-80 %).
+          </p>
           {alerts.map((alert, index) => (
             <div
-              key={`${alert.timestamp}-${index}`}
+              key={`${alert.sensorName}-${alert.timestamp}-${index}`}
               role="alert"
               className={`rounded-2xl border p-4 shadow-sm ${
                 alert.severity === "critical"
@@ -106,7 +134,14 @@ export default function DashboardHumidityPage() {
                   : "bg-amber-50 border-amber-300 text-amber-800"
               }`}
             >
-              <p className="font-semibold">{alert.message}</p>
+              <div className="flex items-center justify-between gap-4">
+                <p className="font-semibold">{alert.message}</p>
+                <span className="text-xs font-bold uppercase whitespace-nowrap">
+                  {alert.severity === "critical"
+                    ? "Критично"
+                    : "Попередження"}
+                </span>
+              </div>
               <p className="text-sm mt-1">
                 Датчик: {alert.sensorName} · {alert.location} ·{" "}
                 {new Date(alert.timestamp).toLocaleString("uk-UA")}
