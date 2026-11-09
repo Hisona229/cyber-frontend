@@ -8,7 +8,6 @@ export default function Navbar() {
     { href: '/', label: 'Архів' },
     { href: '/dashboard-temp', label: 'Температура' },
     { href: '/dashboard-humidity', label: 'Вологість' },
-    { href: '/login', label: 'Вхід' },
   ];
 
   return (
