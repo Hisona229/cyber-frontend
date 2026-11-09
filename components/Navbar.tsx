@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 export default function Navbar() {
   const pathname = usePathname();
   const links = [
-    { href: '/', label: 'Головна' },
+    { href: '/', label: 'Архів' },
     { href: '/dashboard-temp', label: 'Температура' },
     { href: '/dashboard-humidity', label: 'Вологість' },
     { href: '/login', label: 'Вхід' },
